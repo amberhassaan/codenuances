@@ -1,0 +1,9 @@
+#include <iostream>
+
+
+#define DB(s) std::cout << #s << " = " << (s) << std::endl;
+
+using namespace std;
+
+
+

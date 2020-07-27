@@ -1,0 +1,109 @@
+Using virtual functions:
+
+class Base {
+  virtual f () const = 0;
+};
+
+class Derived1: public Base {
+  virtual f() const { ... }
+};
+
+class Derived2: public Base {
+  virtual f() const { ... }
+};
+
+
+
+Using templates:
+
+Method 1: Reverse Hierarchy
+
+class Derived1 {
+  f() const { ... }
+};
+
+class Derived2 {
+  f() const { ... }
+};
+
+
+
+template <typename T>
+class Base {
+  T& derived;
+  Base (T& derived) : derived (derived) {
+  }
+
+  f() const {
+    derived.f();
+  }
+
+}
+
+or 
+
+template <typename T>
+class Base: public T {
+}
+
+
+
+int main() {
+  Base<Derived1> d1;
+  Base<Derived2> d2;
+}
+
+
+Advantages:
+- no virtual functions, no dynamic dispatch
+
+Disadvantages:
+- can't have an instance of Base only i.e. without template parameters
+- can't have a pointer that can point to Base<Derived1> and Base<Derived2> at the same time
+- can't have a list that contatins polymorphic types e.g. Base<Derived1> and Base<Derived2> in
+the same list
+- if Base needs a new polymorphic function, all derived classes have to implement it. We could have our so
+  called derived classes derive themselves from a base class that allows them to share code
+- if any class X implements the exact same interface as Derived1 and Derived2 but is not related to
+  them, it can erroneously be used as template argument Base<X>
+-
+
+
+Method2: Straight Hierarchy with delegate style functions
+Zeeshan Amjad at
+http://www.codeproject.com/KB/cpp/SimulationofVirtualFunc.aspx
+
+template <typename T> 
+class Base {
+public:
+  void f () const {
+    T* const tp = static_cast<T* const> (this);
+    tp->fimpl();
+  }
+
+protected:
+  void fimpl () const {
+    ...
+  }
+};
+
+class Derived1: public Base<Derived1> {
+protected:
+  void fimpl () const {
+    ...
+  }
+}
+
+and same goes for Derived2 and so on.
+
+Advantages
+- no dynamic dispatch
+- Derived classes can add more type-specific functions
+- Derived classes can reuse common code from Base
+- Only classes that derive from Base will compile correctly
+
+Disadvantages
+- can't instantiate Base by itself
+- can't have a collection of different Base<X>, Base<Y> or have a pointer Base* pointing to
+  different derived types
+- 
